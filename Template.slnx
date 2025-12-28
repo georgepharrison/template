@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/frontend/frontend.esproj" />
+    <Project Path="src/Template.AppHost/Template.AppHost.csproj" />
+    <Project Path="src/Template.Server/Template.Server.csproj" />
+  </Folder>
+</Solution>

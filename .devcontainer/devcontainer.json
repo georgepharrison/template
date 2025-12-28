@@ -1,0 +1,42 @@
+{
+  "name": "Template",
+  "build": {
+    "dockerfile": "./Dockerfile",
+    "context": "."
+  },
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces,type=bind",
+  "workspaceFolder": "/workspaces",
+  "postCreateCommand": "dotnet dev-certs https --trust",
+  "appPort": [
+    "5173:5173"
+  ],
+  "portsAttributes": {
+    "5173": {
+      "label": "React Frontend",
+      "onAutoForward": "notify",
+      "protocol": "http"
+    }
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-dotnettools.csdevkit",
+        "csharpier.csharpier-vscode"
+      ],
+      "settings": {
+        "editor.formatOnSave": false,
+        "[csharp]": {
+          "editor.formatOnSave": true,
+          "editor.defaultFormatter": "csharpier.csharpier-vscode"
+        },
+        "[xml]": {
+          "editor.formatOnSave": true,
+          "editor.defaultFormatter": "csharpier.csharpier-vscode"
+        }
+      }
+    }
+  }
+}
