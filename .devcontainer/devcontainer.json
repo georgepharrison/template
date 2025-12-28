@@ -7,9 +7,7 @@
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces,type=bind",
   "workspaceFolder": "/workspaces",
   "postCreateCommand": "dotnet dev-certs https --trust",
-  "appPort": [
-    "5173:5173"
-  ],
+  "appPort": ["5173:5173"],
   "portsAttributes": {
     "5173": {
       "label": "React Frontend",
@@ -24,10 +22,23 @@
     "vscode": {
       "extensions": [
         "ms-dotnettools.csdevkit",
-        "csharpier.csharpier-vscode"
+        "csharpier.csharpier-vscode",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "usernamehw.errorlens",
+        "formulahendry.auto-rename-tag",
+        "anthropic.claude-code"
       ],
       "settings": {
-        "editor.formatOnSave": false,
+        "files.associations": {
+          "*.css": "tailwindcss"
+        },
+        "editor.quickSuggestions": {
+          "strings": "on"
+        },
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true,
         "[csharp]": {
           "editor.formatOnSave": true,
           "editor.defaultFormatter": "csharpier.csharpier-vscode"
@@ -35,6 +46,12 @@
         "[xml]": {
           "editor.formatOnSave": true,
           "editor.defaultFormatter": "csharpier.csharpier-vscode"
+        },
+        "editor.bracketPairColorization.enabled": true,
+        "editor.guides.bracketPairs": true,
+        "emmet.includeLanguages": {
+          "javascript": "javascriptreact",
+          "typescript": "typescriptreact"
         }
       }
     }
