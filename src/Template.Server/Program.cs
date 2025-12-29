@@ -35,6 +35,16 @@ app.UseFileServer();
 
 app.MapGroup("/api/auth").WithTags("Auth").MapIdentityApi<IdentityUser>();
 
+app.MapPost(
+        "/api/auth/logout",
+        async (SignInManager<IdentityUser> signInManager) =>
+        {
+            await signInManager.SignOutAsync();
+            return Results.Ok();
+        }
+    )
+    .WithTags("Auth");
+
 using var scope = app.Services.CreateScope();
 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 await dbContext.Database.MigrateAsync();

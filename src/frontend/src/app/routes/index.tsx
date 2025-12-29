@@ -1,5 +1,7 @@
 import { createBrowserRouter } from 'react-router';
 
+import { ProtectedRoute } from '@/components/protected-route';
+
 import { AppLayout } from './app-layout';
 import { AuthLayout } from './auth-layout';
 import { RootLayout } from './root';
@@ -15,7 +17,9 @@ export const router = createBrowserRouter([
           {
             path: 'login',
             lazy: () =>
-              import('@/pages/login').then((m) => ({ Component: m.LoginPage })),
+              import('@/pages/login').then((m) => ({
+                Component: m.LoginPage,
+              })),
           },
           {
             path: 'signup',
@@ -27,14 +31,19 @@ export const router = createBrowserRouter([
         ],
       },
       {
-        element: <AppLayout />,
+        element: <ProtectedRoute />,
         children: [
           {
-            index: true,
-            lazy: () =>
-              import('@/pages/home').then((m) => ({
-                Component: m.HomePage,
-              })),
+            element: <AppLayout />,
+            children: [
+              {
+                index: true,
+                lazy: () =>
+                  import('@/pages/home').then((m) => ({
+                    Component: m.HomePage,
+                  })),
+              },
+            ],
           },
         ],
       },

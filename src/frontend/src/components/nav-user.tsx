@@ -6,8 +6,8 @@ import {
   LogOut,
   Sparkles,
 } from 'lucide-react';
-import { useNavigate } from 'react-router';
 
+import { ThemeToggle } from '@/components/theme-toggle';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -23,25 +23,12 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { useAuth } from '@/hooks/use-auth';
 import { useTheme } from '@/hooks/use-theme';
 
-import { ThemeToggle } from './theme-toggle';
-
-export function NavUser({
-  user,
-}: {
-  user: {
-    name: string;
-    email: string;
-    avatar: string;
-  };
-}) {
-  const navigate = useNavigate();
+export function NavUser() {
+  const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
-
-  function handleLogout() {
-    navigate('/login');
-  }
 
   const isDark =
     theme === 'dark' ||
@@ -51,6 +38,11 @@ export function NavUser({
   function toggleTheme(event: React.MouseEvent) {
     setTheme(isDark ? 'light' : 'dark', event);
   }
+
+  // Get initials from email
+  const initials = user?.email
+    ? user.email.substring(0, 2).toUpperCase()
+    : '??';
 
   return (
     <SidebarMenu>
@@ -65,12 +57,16 @@ export function NavUser({
             }
           >
             <Avatar className="h-8 w-8 rounded-lg">
-              <AvatarImage src={user.avatar} alt={user.name} />
-              <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+              <AvatarImage src="" alt={user?.email ?? ''} />
+              <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
             </Avatar>
             <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-medium">{user.name}</span>
-              <span className="truncate text-xs">{user.email}</span>
+              <span className="truncate font-medium">
+                {user?.email ?? 'User'}
+              </span>
+              <span className="truncate text-xs">
+                {user?.isEmailConfirmed ? 'Verified' : 'Not verified'}
+              </span>
             </div>
             <ChevronsUpDown className="ml-auto size-4" />
           </DropdownMenuTrigger>
@@ -79,12 +75,18 @@ export function NavUser({
               <DropdownMenuLabel className="p-0 font-normal">
                 <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                   <Avatar className="h-8 w-8 rounded-lg">
-                    <AvatarImage src={user.avatar} alt={user.name} />
-                    <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                    <AvatarImage src="" alt={user?.email ?? ''} />
+                    <AvatarFallback className="rounded-lg">
+                      {initials}
+                    </AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-medium">{user.name}</span>
-                    <span className="truncate text-xs">{user.email}</span>
+                    <span className="truncate font-medium">
+                      {user?.email ?? 'User'}
+                    </span>
+                    <span className="truncate text-xs">
+                      {user?.isEmailConfirmed ? 'Verified' : 'Not verified'}
+                    </span>
                   </div>
                 </div>
               </DropdownMenuLabel>
@@ -116,7 +118,7 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout}>
+            <DropdownMenuItem onClick={logout}>
               <LogOut />
               Log out
             </DropdownMenuItem>

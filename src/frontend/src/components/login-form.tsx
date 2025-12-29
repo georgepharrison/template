@@ -1,7 +1,11 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 
-import { usePostApiAuthLogin } from '@/api/auth.gen';
+import {
+  getGetApiAuthManageInfoQueryKey,
+  usePostApiAuthLogin,
+} from '@/api/auth.gen';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -25,6 +29,7 @@ export function LoginForm({
   ...props
 }: React.ComponentProps<'div'>) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
 
   const loginMutation = usePostApiAuthLogin();
@@ -42,7 +47,10 @@ export function LoginForm({
         data: { email, password },
         params: { useCookies: true },
       });
-      // Login successful - redirect to home
+      // Invalidate auth query so it refetches with new cookie
+      await queryClient.invalidateQueries({
+        queryKey: getGetApiAuthManageInfoQueryKey(),
+      });
       navigate('/');
     } catch {
       setError('Invalid email or password');

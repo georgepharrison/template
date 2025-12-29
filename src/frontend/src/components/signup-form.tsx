@@ -36,8 +36,17 @@ export function SignupForm({
   const registerMutation = usePostApiAuthRegister();
 
   function getFieldErrors(field: 'email' | 'password') {
+    const fieldPatterns = {
+      email: ['email', 'username', 'user'],
+      password: ['password'],
+    };
+
     return Object.entries(fieldErrors)
-      .filter(([key]) => key.toLowerCase().includes(field))
+      .filter(([key]) =>
+        fieldPatterns[field].some((pattern) =>
+          key.toLowerCase().includes(pattern)
+        )
+      )
       .flatMap(([, messages]) => messages);
   }
 
