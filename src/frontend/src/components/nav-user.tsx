@@ -23,6 +23,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { useTheme } from '@/hooks/use-theme';
+
+import { ThemeToggle } from './theme-toggle';
 
 export function NavUser({
   user,
@@ -34,9 +37,19 @@ export function NavUser({
   };
 }) {
   const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
 
   function handleLogout() {
     navigate('/login');
+  }
+
+  const isDark =
+    theme === 'dark' ||
+    (theme === 'system' &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+  function toggleTheme(event: React.MouseEvent) {
+    setTheme(isDark ? 'light' : 'dark', event);
   }
 
   return (
@@ -96,6 +109,10 @@ export function NavUser({
               <DropdownMenuItem>
                 <Bell />
                 Notifications
+              </DropdownMenuItem>
+              <DropdownMenuItem closeOnClick={false} onClick={toggleTheme}>
+                <ThemeToggle toggled={isDark} className="text-lg" />
+                <span className="flex-1">Theme</span>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
