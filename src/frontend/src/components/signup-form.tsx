@@ -24,6 +24,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
+import { PasswordInput } from './ui/password-input';
+
 export function SignupForm({
   className,
   ...props
@@ -129,10 +131,9 @@ export function SignupForm({
               </Field>
               <Field>
                 <FieldLabel htmlFor="password">Password</FieldLabel>
-                <Input
+                <PasswordInput
                   id="password"
                   name="password"
-                  type="password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
