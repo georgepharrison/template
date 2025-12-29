@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router';
 
 import { ProtectedRoute } from '@/components/protected-route';
+import { FullPageSpinner } from '@/components/ui/spinner';
 
 import { AppLayout } from './app-layout';
 import { AuthLayout } from './auth-layout';
@@ -10,6 +11,7 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: <RootLayout />,
+    hydrateFallbackElement: <FullPageSpinner />,
     children: [
       {
         element: <AuthLayout />,

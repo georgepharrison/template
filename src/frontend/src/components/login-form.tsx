@@ -3,6 +3,15 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 
 import { getGetApiAuthMeQueryKey, usePostApiAuthLogin } from '@/api/auth.gen';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -33,6 +42,7 @@ export function LoginForm({
   const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [showLockoutDialog, setShowLockoutDialog] = useState(false);
 
   const loginMutation = usePostApiAuthLogin();
 
@@ -68,8 +78,14 @@ export function LoginForm({
         queryKey: getGetApiAuthMeQueryKey(),
       });
       navigate('/');
-    } catch {
-      setError('Invalid email or password');
+    } catch (err) {
+      const detail = (err as { detail?: string })?.detail;
+
+      if (detail === 'LockedOut') {
+        setShowLockoutDialog(true);
+      } else {
+        setError('Invalid email or password');
+      }
     }
   }
 
@@ -182,6 +198,22 @@ export function LoginForm({
           </form>
         </CardContent>
       </Card>
+      <AlertDialog open={showLockoutDialog} onOpenChange={setShowLockoutDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Account Temporarily Locked</AlertDialogTitle>
+            <AlertDialogDescription>
+              Too many failed login attempts. Your account has been temporarily
+              locked for security. Please try again in a few minutes.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowLockoutDialog(false)}>
+              OK
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
