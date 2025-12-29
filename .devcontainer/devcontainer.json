@@ -28,7 +28,8 @@
         "bradlc.vscode-tailwindcss",
         "usernamehw.errorlens",
         "formulahendry.auto-rename-tag",
-        "anthropic.claude-code"
+        "anthropic.claude-code",
+        "humao.rest-client"
       ],
       "settings": {
         "files.associations": {

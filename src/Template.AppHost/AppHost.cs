@@ -1,6 +1,6 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var postgres = builder.AddPostgres("postgres").WithPgWeb();
+var postgres = builder.AddPostgres("postgres").WithDataVolume().WithPgWeb();
 
 var db = postgres.AddDatabase("postgresdb");
 
