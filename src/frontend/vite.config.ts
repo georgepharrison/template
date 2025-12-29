@@ -16,7 +16,23 @@ export default defineConfig({
         secure: false,
         configure: (proxy) => {
           proxy.on('proxyReq', (proxyReq, req) => {
-            // Forward the original host and protocol to the backend
+            const forwardedHost =
+              req.headers['x-forwarded-host'] || req.headers.host;
+            const forwardedProto = req.headers['x-forwarded-proto'] || 'https';
+
+            if (forwardedHost) {
+              proxyReq.setHeader('X-Forwarded-Host', forwardedHost);
+            }
+            proxyReq.setHeader('X-Forwarded-Proto', forwardedProto);
+          });
+        },
+      },
+      '/signin-google': {
+        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        changeOrigin: true,
+        secure: false,
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq, req) => {
             const forwardedHost =
               req.headers['x-forwarded-host'] || req.headers.host;
             const forwardedProto = req.headers['x-forwarded-proto'] || 'https';
