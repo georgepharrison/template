@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Link } from 'react-router';
 
 import {
   usePostApiAuthRegister,
   type HttpValidationProblemDetails,
 } from '@/api/auth.gen';
 import { PasswordRequirements } from '@/components/password-requirements';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -28,10 +28,10 @@ export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<'div'>) {
-  const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  const [success, setSuccess] = useState(false);
 
   const registerMutation = usePostApiAuthRegister();
 
@@ -62,7 +62,7 @@ export function SignupForm({
       await registerMutation.mutateAsync({
         data: { email, password },
       });
-      navigate('/login');
+      setSuccess(true);
     } catch (err) {
       const validationError = err as HttpValidationProblemDetails;
       if (validationError.errors) {
@@ -77,6 +77,25 @@ export function SignupForm({
 
   const emailErrors = getFieldErrors('email');
   const passwordErrors = getFieldErrors('password');
+
+  if (success) {
+    return (
+      <Card>
+        <CardHeader className="text-center">
+          <CardTitle className="text-xl">Check your email</CardTitle>
+          <CardDescription>
+            We've sent a confirmation link to your email address. Please click
+            the link to verify your account.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="text-center">
+          <Link to="/login" className={buttonVariants({ variant: 'outline' })}>
+            Back to Login
+          </Link>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>

@@ -1,6 +1,9 @@
+using System.Net;
 using System.Security.Claims;
+using System.Text;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.WebUtilities;
 
 namespace Template.Server;
 
@@ -31,6 +34,34 @@ public static class AuthEndpoints
                     $"{BasePath}/google-callback?returnUrl={Uri.EscapeDataString(returnUrl ?? "/")}";
                 var properties = new AuthenticationProperties { RedirectUri = redirectUrl };
                 return Results.Challenge(properties, ["Google"]);
+            }
+        );
+
+        group.MapPost(
+            "/forgot-password",
+            async (
+                ForgotPasswordRequest request,
+                UserManager<IdentityUser> userManager,
+                IEmailSender<IdentityUser> emailSender,
+                HttpContext httpContext
+            ) =>
+            {
+                var user = await userManager.FindByEmailAsync(request.Email);
+                if (user == null || !await userManager.IsEmailConfirmedAsync(user))
+                {
+                    return Results.Ok();
+                }
+
+                var code = await userManager.GeneratePasswordResetTokenAsync(user);
+                // Use Base64Url encoding - this is what Identity's /resetPassword expects
+                var encodedCode = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+
+                var resetLink =
+                    $"{httpContext.Request.Scheme}://{httpContext.Request.Host}/api/auth/resetPassword?email={WebUtility.UrlEncode(request.Email)}&code={encodedCode}";
+
+                await emailSender.SendPasswordResetLinkAsync(user, request.Email, resetLink);
+
+                return Results.Ok();
             }
         );
 
@@ -97,3 +128,5 @@ public static class AuthEndpoints
         );
     }
 }
+
+public record ForgotPasswordRequest(string Email);

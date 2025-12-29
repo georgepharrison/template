@@ -1,17 +1,20 @@
+interface CustomFetchOptions {
+  url: string;
+  method: string;
+  params?: Record<string, unknown>;
+  data?: unknown;
+  headers?: Record<string, string>;
+  signal?: AbortSignal;
+}
+
 export const customFetch = async <T>({
   url,
   method,
   params,
   data,
+  headers,
   signal,
-}: {
-  url: string;
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
-  params?: Record<string, string | boolean | undefined>;
-  data?: unknown;
-  headers?: Record<string, string>;
-  signal?: AbortSignal;
-}): Promise<T> => {
+}: CustomFetchOptions): Promise<T> => {
   const filteredParams = params
     ? Object.fromEntries(
         Object.entries(params).filter(([, v]) => v !== undefined)
@@ -19,21 +22,19 @@ export const customFetch = async <T>({
     : undefined;
 
   const searchParams = filteredParams
-    ? `?${new URLSearchParams(filteredParams as Record<string, string>).toString()}`
+    ? `?${new URLSearchParams(filteredParams as Record<string, string>)}`
     : '';
 
   const response = await fetch(`${url}${searchParams}`, {
     method,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    credentials: 'include', // Send cookies with requests
+    headers:
+      headers ?? (data ? { 'Content-Type': 'application/json' } : undefined),
+    credentials: 'include',
     body: data ? JSON.stringify(data) : undefined,
     signal,
   });
 
   if (!response.ok) {
-    // Parse error response for validation errors
     const errorText = await response.text();
     let errorBody;
     try {
@@ -45,9 +46,11 @@ export const customFetch = async <T>({
   }
 
   const text = await response.text();
-  if (!text) {
-    return undefined as T;
-  }
+  if (!text) return undefined as T;
 
-  return JSON.parse(text);
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text as T;
+  }
 };

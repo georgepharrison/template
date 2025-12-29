@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Template.Server;
+using Template.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,8 +28,13 @@ builder
     });
 
 builder
-    .Services.AddIdentityApiEndpoints<IdentityUser>()
+    .Services.AddIdentityApiEndpoints<IdentityUser>(options =>
+    {
+        options.SignIn.RequireConfirmedEmail = true;
+    })
     .AddEntityFrameworkStores<ApplicationDbContext>();
+
+builder.Services.AddSingleton<IEmailSender<IdentityUser>, LoggingEmailSender>();
 
 var app = builder.Build();
 

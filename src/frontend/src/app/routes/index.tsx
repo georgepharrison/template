@@ -28,6 +28,27 @@ export const router = createBrowserRouter([
                 Component: m.SignupPage,
               })),
           },
+          {
+            path: 'confirm-email',
+            lazy: () =>
+              import('@/pages/confirm-email').then((m) => ({
+                Component: m.ConfirmEmailPage,
+              })),
+          },
+          {
+            path: 'forgot-password',
+            lazy: () =>
+              import('@/pages/forgot-password').then((m) => ({
+                Component: m.ForgotPasswordPage,
+              })),
+          },
+          {
+            path: 'reset-password',
+            lazy: () =>
+              import('@/pages/reset-password').then((m) => ({
+                Component: m.ResetPasswordPage,
+              })),
+          },
         ],
       },
       {
