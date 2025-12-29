@@ -58,8 +58,8 @@ export function LoginForm({
   }
 
   function handleGoogleLogin() {
-    // TODO: Redirect to BFF Google OAuth endpoint
-    // window.location.href = '/api/auth/login-google';
+    const returnUrl = encodeURIComponent(window.location.origin + '/');
+    window.location.href = `/api/auth/login-google?returnUrl=${returnUrl}`;
   }
 
   function handleAppleLogin() {

@@ -9,12 +9,22 @@ builder.AddNpgsqlDbContext<ApplicationDbContext>("postgresdb");
 
 builder.AddServiceDefaults();
 
-builder.Services.AddProblemDetails().AddOpenApi().AddAuthorization().AddAuthentication();
+builder
+    .Services.AddProblemDetails()
+    .AddOpenApi()
+    .AddAuthorization()
+    .AddAuthentication()
+    .AddGoogle(googleOptions =>
+    {
+        GoogleOptions options =
+            builder.Configuration.GetSection("Authentication:Google").Get<GoogleOptions>()
+            ?? throw new KeyNotFoundException("??");
 
-// .AddGoogle(googleOptions =>
-// {
-//     builder.Configuration.GetSection("Authentication:Google").Bind(googleOptions);
-// });
+        googleOptions.ClientId = options.ClientId;
+        googleOptions.ClientSecret = options.ClientSecret;
+        googleOptions.CallbackPath = "/signin-google";
+        googleOptions.SignInScheme = IdentityConstants.ExternalScheme;
+    });
 
 builder
     .Services.AddIdentityApiEndpoints<IdentityUser>()
@@ -29,21 +39,14 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.MapDefaultEndpoints();
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseFileServer();
 
-app.MapGroup("/api/auth").WithTags("Auth").MapIdentityApi<IdentityUser>();
+app.MapDefaultEndpoints();
 
-app.MapPost(
-        "/api/auth/logout",
-        async (SignInManager<IdentityUser> signInManager) =>
-        {
-            await signInManager.SignOutAsync();
-            return Results.Ok();
-        }
-    )
-    .WithTags("Auth");
+app.MapAuthEndpoints();
 
 using var scope = app.Services.CreateScope();
 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
