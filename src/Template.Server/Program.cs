@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Template.Server;
@@ -43,7 +44,40 @@ builder
 
 builder.Services.AddSingleton<IEmailSender<IdentityUser>, LoggingEmailSender>();
 
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders =
+        ForwardedHeaders.XForwardedFor
+        | ForwardedHeaders.XForwardedProto
+        | ForwardedHeaders.XForwardedHost;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 var app = builder.Build();
+
+app.UseForwardedHeaders();
+
+app.Use(
+    async (context, next) =>
+    {
+        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+        logger.LogInformation(
+            "Scheme: {Scheme}, Host: {Host}",
+            context.Request.Scheme,
+            context.Request.Host
+        );
+        logger.LogInformation(
+            "X-Forwarded-Proto: {Proto}",
+            context.Request.Headers["X-Forwarded-Proto"]
+        );
+        logger.LogInformation(
+            "X-Forwarded-Host: {Host}",
+            context.Request.Headers["X-Forwarded-Host"]
+        );
+        await next();
+    }
+);
 
 app.UseExceptionHandler();
 
