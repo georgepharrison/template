@@ -1,9 +1,9 @@
 import { createContext } from 'react';
 
-import type { InfoResponse } from '@/api/auth.gen';
+import type { UserInfoResponse } from '@/api/auth.gen';
 
 export type AuthState = {
-  user: InfoResponse | null;
+  user: UserInfoResponse | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   logout: () => void;

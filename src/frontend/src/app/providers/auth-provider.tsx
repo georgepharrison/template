@@ -2,7 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router';
 
-import { useGetApiAuthManageInfo } from '@/api/auth.gen';
+import { useGetApiAuthMe } from '@/api/auth.gen';
 
 import { AuthContext } from './auth-context';
 
@@ -14,10 +14,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     data: user,
     isLoading,
     error,
-  } = useGetApiAuthManageInfo({
+  } = useGetApiAuthMe({
     query: {
       retry: false,
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 5 * 60 * 1000,
     },
   });
 

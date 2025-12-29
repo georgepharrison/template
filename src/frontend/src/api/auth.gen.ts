@@ -142,6 +142,14 @@ export interface TwoFactorResponse {
   isMachineRemembered: boolean;
 }
 
+export type UserInfoResponsePicture = null | string;
+
+export interface UserInfoResponse {
+  email: string;
+  isEmailConfirmed: boolean;
+  picture: UserInfoResponsePicture;
+}
+
 export type PostApiAuthLoginParams = {
   useCookies?: boolean;
   useSessionCookies?: boolean;
@@ -1468,6 +1476,127 @@ export function useGetApiAuthGoogleCallback<
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
   const queryOptions = getGetApiAuthGoogleCallbackQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const getApiAuthMe = (signal?: AbortSignal) => {
+  return customFetch<UserInfoResponse>({
+    url: `/api/auth/me`,
+    method: 'GET',
+    signal,
+  });
+};
+
+export const getGetApiAuthMeQueryKey = () => {
+  return [`/api/auth/me`] as const;
+};
+
+export const getGetApiAuthMeQueryOptions = <
+  TData = Awaited<ReturnType<typeof getApiAuthMe>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<Awaited<ReturnType<typeof getApiAuthMe>>, TError, TData>
+  >;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetApiAuthMeQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiAuthMe>>> = ({
+    signal,
+  }) => getApiAuthMe(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getApiAuthMe>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetApiAuthMeQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getApiAuthMe>>
+>;
+export type GetApiAuthMeQueryError = unknown;
+
+export function useGetApiAuthMe<
+  TData = Awaited<ReturnType<typeof getApiAuthMe>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getApiAuthMe>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAuthMe>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAuthMe>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetApiAuthMe<
+  TData = Awaited<ReturnType<typeof getApiAuthMe>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getApiAuthMe>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAuthMe>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAuthMe>>
+        >,
+        'initialData'
+      >;
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetApiAuthMe<
+  TData = Awaited<ReturnType<typeof getApiAuthMe>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getApiAuthMe>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useGetApiAuthMe<
+  TData = Awaited<ReturnType<typeof getApiAuthMe>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getApiAuthMe>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getGetApiAuthMeQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,

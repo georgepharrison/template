@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -19,12 +20,18 @@ builder
     {
         GoogleOptions options =
             builder.Configuration.GetSection("Authentication:Google").Get<GoogleOptions>()
-            ?? throw new KeyNotFoundException("??");
+            ?? throw new KeyNotFoundException("Google auth configuration not found");
 
         googleOptions.ClientId = options.ClientId;
         googleOptions.ClientSecret = options.ClientSecret;
         googleOptions.CallbackPath = "/signin-google";
         googleOptions.SignInScheme = IdentityConstants.ExternalScheme;
+
+        // Request profile scope
+        googleOptions.Scope.Add("profile");
+
+        // Map the picture claim from Google's response
+        googleOptions.ClaimActions.MapJsonKey("picture", "picture");
     });
 
 builder

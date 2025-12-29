@@ -2,10 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 
-import {
-  getGetApiAuthManageInfoQueryKey,
-  usePostApiAuthLogin,
-} from '@/api/auth.gen';
+import { getGetApiAuthMeQueryKey, usePostApiAuthLogin } from '@/api/auth.gen';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -68,7 +65,7 @@ export function LoginForm({
         params: { useCookies: true },
       });
       await queryClient.invalidateQueries({
-        queryKey: getGetApiAuthManageInfoQueryKey(),
+        queryKey: getGetApiAuthMeQueryKey(),
       });
       navigate('/');
     } catch {

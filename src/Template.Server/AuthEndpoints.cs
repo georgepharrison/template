@@ -37,34 +37,6 @@ public static class AuthEndpoints
             }
         );
 
-        group.MapPost(
-            "/forgot-password",
-            async (
-                ForgotPasswordRequest request,
-                UserManager<IdentityUser> userManager,
-                IEmailSender<IdentityUser> emailSender,
-                HttpContext httpContext
-            ) =>
-            {
-                var user = await userManager.FindByEmailAsync(request.Email);
-                if (user == null || !await userManager.IsEmailConfirmedAsync(user))
-                {
-                    return Results.Ok();
-                }
-
-                var code = await userManager.GeneratePasswordResetTokenAsync(user);
-                // Use Base64Url encoding - this is what Identity's /resetPassword expects
-                var encodedCode = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-
-                var resetLink =
-                    $"{httpContext.Request.Scheme}://{httpContext.Request.Host}/api/auth/resetPassword?email={WebUtility.UrlEncode(request.Email)}&code={encodedCode}";
-
-                await emailSender.SendPasswordResetLinkAsync(user, request.Email, resetLink);
-
-                return Results.Ok();
-            }
-        );
-
         group.MapGet(
             "/google-callback",
             async (
@@ -82,6 +54,7 @@ public static class AuthEndpoints
 
                 var email = result.Principal.FindFirstValue(ClaimTypes.Email);
                 var providerKey = result.Principal.FindFirstValue(ClaimTypes.NameIdentifier);
+                var picture = result.Principal.FindFirstValue("picture");
                 const string loginProvider = "Google";
 
                 if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(providerKey))
@@ -97,6 +70,13 @@ public static class AuthEndpoints
 
                 if (signInResult.Succeeded)
                 {
+                    // Update picture on existing user
+                    var existingUser = await userManager.FindByEmailAsync(email);
+                    if (existingUser != null && !string.IsNullOrEmpty(picture))
+                    {
+                        await UpdatePictureClaim(userManager, existingUser, picture);
+                    }
+
                     await httpContext.SignOutAsync(IdentityConstants.ExternalScheme);
                     return Results.Redirect(returnUrl ?? "/");
                 }
@@ -117,6 +97,12 @@ public static class AuthEndpoints
                     }
                 }
 
+                // Store picture as claim
+                if (!string.IsNullOrEmpty(picture))
+                {
+                    await UpdatePictureClaim(userManager, user, picture);
+                }
+
                 var loginInfo = new UserLoginInfo(loginProvider, providerKey, loginProvider);
                 await userManager.AddLoginAsync(user, loginInfo);
 
@@ -126,7 +112,82 @@ public static class AuthEndpoints
                 return Results.Redirect(returnUrl ?? "/");
             }
         );
+
+        group.MapPost(
+            "/forgot-password",
+            async (
+                ForgotPasswordRequest request,
+                UserManager<IdentityUser> userManager,
+                IEmailSender<IdentityUser> emailSender,
+                HttpContext httpContext
+            ) =>
+            {
+                var user = await userManager.FindByEmailAsync(request.Email);
+                if (user == null || !await userManager.IsEmailConfirmedAsync(user))
+                {
+                    return Results.Ok();
+                }
+
+                var code = await userManager.GeneratePasswordResetTokenAsync(user);
+                var encodedCode = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+
+                var resetLink =
+                    $"{httpContext.Request.Scheme}://{httpContext.Request.Host}/api/auth/resetPassword?email={WebUtility.UrlEncode(request.Email)}&code={encodedCode}";
+
+                await emailSender.SendPasswordResetLinkAsync(user, request.Email, resetLink);
+
+                return Results.Ok();
+            }
+        );
+
+        // Custom endpoint to get user info with picture
+        group
+            .MapGet(
+                "/me",
+                async (HttpContext httpContext, UserManager<IdentityUser> userManager) =>
+                {
+                    var userId = userManager.GetUserId(httpContext.User);
+                    if (userId == null)
+                    {
+                        return Results.Unauthorized();
+                    }
+
+                    var user = await userManager.FindByIdAsync(userId);
+                    if (user == null)
+                    {
+                        return Results.Unauthorized();
+                    }
+
+                    var claims = await userManager.GetClaimsAsync(user);
+                    var picture = claims.FirstOrDefault(c => c.Type == "picture")?.Value;
+
+                    return Results.Ok(
+                        new UserInfoResponse(user.Email ?? "", user.EmailConfirmed, picture)
+                    );
+                }
+            )
+            .RequireAuthorization()
+            .Produces<UserInfoResponse>();
+    }
+
+    private static async Task UpdatePictureClaim(
+        UserManager<IdentityUser> userManager,
+        IdentityUser user,
+        string picture
+    )
+    {
+        var existingClaims = await userManager.GetClaimsAsync(user);
+        var existingPicture = existingClaims.FirstOrDefault(c => c.Type == "picture");
+
+        if (existingPicture != null)
+        {
+            await userManager.RemoveClaimAsync(user, existingPicture);
+        }
+
+        await userManager.AddClaimAsync(user, new Claim("picture", picture));
     }
 }
 
 public record ForgotPasswordRequest(string Email);
+
+public record UserInfoResponse(string Email, bool IsEmailConfirmed, string? Picture);
