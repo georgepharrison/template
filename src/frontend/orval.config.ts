@@ -1,13 +1,13 @@
 import { defineConfig } from 'orval';
 
 export default defineConfig({
-  todo: {
+  auth: {
     input: {
       target: 'http://localhost:5476/openapi/v1.json',
     },
     output: {
       mode: 'single',
-      target: './src/api/todo.gen.ts',
+      target: './src/api/auth.gen.ts',
       client: 'react-query',
       override: {
         mutator: {

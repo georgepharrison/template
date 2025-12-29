@@ -1,6 +1,7 @@
-import type React from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 
+import { usePostApiAuthLogin } from '@/api/auth.gen';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -24,18 +25,38 @@ export function LoginForm({
   ...props
 }: React.ComponentProps<'div'>) {
   const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  const loginMutation = usePostApiAuthLogin();
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    navigate('/');
+    setError(null);
+
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+
+    try {
+      await loginMutation.mutateAsync({
+        data: { email, password },
+        params: { useCookies: true },
+      });
+      // Login successful - redirect to home
+      navigate('/');
+    } catch {
+      setError('Invalid email or password');
+    }
   }
 
   function handleGoogleLogin() {
-    navigate('/');
+    // TODO: Redirect to BFF Google OAuth endpoint
+    // window.location.href = '/api/auth/login-google';
   }
 
   function handleAppleLogin() {
-    navigate('/');
+    // TODO: Redirect to BFF Apple OAuth endpoint
+    // window.location.href = '/api/auth/login-apple';
   }
 
   return (
@@ -85,6 +106,7 @@ export function LoginForm({
                 <FieldLabel htmlFor="email">Email</FieldLabel>
                 <Input
                   id="email"
+                  name="email"
                   type="email"
                   placeholder="m@example.com"
                   required
@@ -93,17 +115,28 @@ export function LoginForm({
               <Field>
                 <div className="flex items-center">
                   <FieldLabel htmlFor="password">Password</FieldLabel>
-                  <a
-                    href="#"
+                  <Link
+                    to="/forgot-password"
                     className="ml-auto text-sm underline-offset-4 hover:underline"
                   >
                     Forgot your password?
-                  </a>
+                  </Link>
                 </div>
-                <Input id="password" type="password" required />
+                <Input id="password" name="password" type="password" required />
               </Field>
+              {error && (
+                <div className="bg-destructive/10 text-destructive rounded-md p-3 text-center text-sm">
+                  {error}
+                </div>
+              )}
               <Field>
-                <Button type="submit">Login</Button>
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={loginMutation.isPending}
+                >
+                  {loginMutation.isPending ? 'Logging in...' : 'Login'}
+                </Button>
                 <FieldDescription className="text-center">
                   Don&apos;t have an account? <Link to="/signup">Sign up</Link>
                 </FieldDescription>
@@ -113,8 +146,9 @@ export function LoginForm({
         </CardContent>
       </Card>
       <FieldDescription className="px-6 text-center">
-        By clicking continue, you agree to our <a href="#">Terms of Service</a>{' '}
-        and <a href="#">Privacy Policy</a>.
+        By clicking continue, you agree to our{' '}
+        <Link to="/terms">Terms of Service</Link> and{' '}
+        <Link to="/privacy">Privacy Policy</Link>.
       </FieldDescription>
     </div>
   );

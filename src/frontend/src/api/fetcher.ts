@@ -3,15 +3,23 @@ export const customFetch = async <T>({
   method,
   params,
   data,
+  signal,
 }: {
   url: string;
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
-  params?: Record<string, string>;
+  params?: Record<string, string | boolean | undefined>;
   data?: unknown;
   headers?: Record<string, string>;
+  signal?: AbortSignal;
 }): Promise<T> => {
-  const searchParams = params
-    ? `?${new URLSearchParams(params).toString()}`
+  const filteredParams = params
+    ? Object.fromEntries(
+        Object.entries(params).filter(([, v]) => v !== undefined)
+      )
+    : undefined;
+
+  const searchParams = filteredParams
+    ? `?${new URLSearchParams(filteredParams as Record<string, string>).toString()}`
     : '';
 
   const response = await fetch(`${url}${searchParams}`, {
@@ -19,14 +27,23 @@ export const customFetch = async <T>({
     headers: {
       'Content-Type': 'application/json',
     },
+    credentials: 'include', // Send cookies with requests
     body: data ? JSON.stringify(data) : undefined,
+    signal,
   });
 
   if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+    // Parse error response for validation errors
+    const errorText = await response.text();
+    let errorBody;
+    try {
+      errorBody = JSON.parse(errorText);
+    } catch {
+      errorBody = { detail: errorText };
+    }
+    throw errorBody;
   }
 
-  // Handle empty responses (204 or empty body)
   const text = await response.text();
   if (!text) {
     return undefined as T;
