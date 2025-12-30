@@ -1,9 +1,32 @@
+import type { ClientRequest, IncomingMessage } from 'http';
 import path from 'path';
 
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+
+// Helper to configure proxy with forwarded headers
+const configureProxy = (proxy: {
+  on(
+    event: 'proxyReq',
+    cb: (proxyReq: ClientRequest, req: IncomingMessage) => void
+  ): void;
+}) => {
+  proxy.on('proxyReq', (proxyReq, req) => {
+    const host = req.headers.host;
+    const forwardedHost = req.headers['x-forwarded-host'] || host;
+
+    const isLocalhost = host?.includes('localhost');
+    const forwardedProto =
+      req.headers['x-forwarded-proto'] || (isLocalhost ? 'http' : 'https');
+
+    if (forwardedHost) {
+      proxyReq.setHeader('X-Forwarded-Host', forwardedHost);
+    }
+    proxyReq.setHeader('X-Forwarded-Proto', forwardedProto);
+  });
+};
 
 export default defineConfig({
   plugins: [
@@ -69,33 +92,13 @@ export default defineConfig({
         target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
         changeOrigin: true,
         secure: false,
-        configure: (proxy) => {
-          proxy.on('proxyReq', (proxyReq, req) => {
-            const forwardedHost =
-              req.headers['x-forwarded-host'] || req.headers.host;
-            const forwardedProto = req.headers['x-forwarded-proto'] || 'https';
-            if (forwardedHost) {
-              proxyReq.setHeader('X-Forwarded-Host', forwardedHost);
-            }
-            proxyReq.setHeader('X-Forwarded-Proto', forwardedProto);
-          });
-        },
+        configure: configureProxy,
       },
       '/signin-google': {
         target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
         changeOrigin: true,
         secure: false,
-        configure: (proxy) => {
-          proxy.on('proxyReq', (proxyReq, req) => {
-            const forwardedHost =
-              req.headers['x-forwarded-host'] || req.headers.host;
-            const forwardedProto = req.headers['x-forwarded-proto'] || 'https';
-            if (forwardedHost) {
-              proxyReq.setHeader('X-Forwarded-Host', forwardedHost);
-            }
-            proxyReq.setHeader('X-Forwarded-Proto', forwardedProto);
-          });
-        },
+        configure: configureProxy,
       },
     },
   },

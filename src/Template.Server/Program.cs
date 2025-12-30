@@ -58,27 +58,6 @@ var app = builder.Build();
 
 app.UseForwardedHeaders();
 
-app.Use(
-    async (context, next) =>
-    {
-        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
-        logger.LogInformation(
-            "Scheme: {Scheme}, Host: {Host}",
-            context.Request.Scheme,
-            context.Request.Host
-        );
-        logger.LogInformation(
-            "X-Forwarded-Proto: {Proto}",
-            context.Request.Headers["X-Forwarded-Proto"]
-        );
-        logger.LogInformation(
-            "X-Forwarded-Host: {Host}",
-            context.Request.Headers["X-Forwarded-Host"]
-        );
-        await next();
-    }
-);
-
 app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
