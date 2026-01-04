@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router';
+import { useSearchParams } from 'react-router';
 
 import { mapIdentityApiApiAuthConfirmEmail } from '@/api/auth.gen';
 import { buttonVariants } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Link } from '@/components/ui/link';
 
 export function ConfirmEmailPage() {
   const [searchParams] = useSearchParams();

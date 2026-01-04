@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 
 import { getGetApiAuthMeQueryKey, usePostApiAuthLogin } from '@/api/auth.gen';
 import {
@@ -31,6 +31,9 @@ import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
 import { cn } from '@/lib/utils';
 
+import { OTPForm } from './otp-form';
+import { Link } from './ui/link';
+
 const REMEMBERED_EMAIL_KEY = 'remembered-email';
 
 export function LoginForm({
@@ -41,8 +44,11 @@ export function LoginForm({
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showLockoutDialog, setShowLockoutDialog] = useState(false);
+  const [requiresTwoFactor, setRequiresTwoFactor] = useState(false);
+  const [twoFactorCode, setTwoFactorCode] = useState('');
 
   const loginMutation = usePostApiAuthLogin();
 
@@ -55,12 +61,9 @@ export function LoginForm({
     }
   }, []);
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function handleSubmit(event?: React.FormEvent) {
+    event?.preventDefault();
     setError(null);
-
-    const formData = new FormData(event.currentTarget);
-    const password = formData.get('password') as string;
 
     // Save or clear remembered email
     if (rememberMe) {
@@ -69,9 +72,28 @@ export function LoginForm({
       localStorage.removeItem(REMEMBERED_EMAIL_KEY);
     }
 
+    // Build login request
+    const loginData: {
+      email: string;
+      password: string;
+      twoFactorCode?: string;
+      twoFactorRecoveryCode?: string;
+    } = { email, password };
+
+    // If 2FA is required, add the code
+    if (requiresTwoFactor && twoFactorCode) {
+      // Recovery codes are in format XXXXX-XXXXX (11 chars with dash)
+      // TOTP codes are 6 digits
+      if (twoFactorCode.includes('-') || twoFactorCode.length > 6) {
+        loginData.twoFactorRecoveryCode = twoFactorCode;
+      } else {
+        loginData.twoFactorCode = twoFactorCode;
+      }
+    }
+
     try {
       await loginMutation.mutateAsync({
-        data: { email, password },
+        data: loginData,
         params: { useCookies: true },
       });
       await queryClient.invalidateQueries({
@@ -83,6 +105,11 @@ export function LoginForm({
 
       if (detail === 'LockedOut') {
         setShowLockoutDialog(true);
+      } else if (detail === 'RequiresTwoFactor') {
+        setRequiresTwoFactor(true);
+        setTwoFactorCode('');
+      } else if (requiresTwoFactor) {
+        setError('Invalid two-factor code. Please try again.');
       } else {
         setError('Invalid email or password');
       }
@@ -94,6 +121,30 @@ export function LoginForm({
     window.location.href = `/api/auth/login-google?returnUrl=${returnUrl}`;
   }
 
+  function handleBackToLogin() {
+    setRequiresTwoFactor(false);
+    setTwoFactorCode('');
+    setPassword('');
+    setError(null);
+  }
+
+  // 2FA flow
+  if (requiresTwoFactor) {
+    return (
+      <div className={cn('flex flex-col gap-6', className)} {...props}>
+        <OTPForm
+          value={twoFactorCode}
+          onChange={setTwoFactorCode}
+          onSubmit={handleSubmit}
+          onBack={handleBackToLogin}
+          isLoading={loginMutation.isPending}
+          error={error}
+        />
+      </div>
+    );
+  }
+
+  // Normal login flow
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
       <Card>
@@ -158,7 +209,13 @@ export function LoginForm({
                     Forgot your password?
                   </Link>
                 </div>
-                <PasswordInput id="password" name="password" required />
+                <PasswordInput
+                  id="password"
+                  name="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
               </Field>
               <Field>
                 <div className="flex items-center gap-2">
@@ -182,29 +239,31 @@ export function LoginForm({
                   {error}
                 </div>
               )}
-              <Field>
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={loginMutation.isPending}
-                >
-                  {loginMutation.isPending ? 'Logging in...' : 'Login'}
-                </Button>
-                <FieldDescription className="text-center">
-                  Don&apos;t have an account? <Link to="/signup">Sign up</Link>
-                </FieldDescription>
-              </Field>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={loginMutation.isPending}
+              >
+                {loginMutation.isPending ? 'Logging in...' : 'Login'}
+              </Button>
+              <FieldDescription className="text-center">
+                Don&apos;t have an account?{' '}
+                <Link to="/signup" className="underline">
+                  Sign up
+                </Link>
+              </FieldDescription>
             </FieldGroup>
           </form>
         </CardContent>
       </Card>
+
       <AlertDialog open={showLockoutDialog} onOpenChange={setShowLockoutDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Account Temporarily Locked</AlertDialogTitle>
+            <AlertDialogTitle>Account Locked</AlertDialogTitle>
             <AlertDialogDescription>
-              Too many failed login attempts. Your account has been temporarily
-              locked for security. Please try again in a few minutes.
+              Your account has been temporarily locked due to too many failed
+              login attempts. Please try again later or reset your password.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

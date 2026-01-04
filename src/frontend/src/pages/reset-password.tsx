@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useSearchParams } from 'react-router';
+import { useSearchParams } from 'react-router';
 
 import { usePostApiAuthResetPassword } from '@/api/auth.gen';
 import { PasswordRequirements } from '@/components/password-requirements';
@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Link } from '@/components/ui/link';
 import { PasswordInput } from '@/components/ui/password-input';
 
 export function ResetPasswordPage() {

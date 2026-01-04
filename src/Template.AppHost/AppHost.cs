@@ -1,5 +1,7 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
+builder.AddDockerComposeEnvironment("compose");
+
 var postgres = builder.AddPostgres("postgres").WithDataVolume().WithPgWeb();
 
 var db = postgres.AddDatabase("postgresdb");

@@ -1,5 +1,7 @@
 import { GalleryVerticalEnd } from 'lucide-react';
-import { Link, Outlet } from 'react-router';
+import { Outlet } from 'react-router';
+
+import { Link } from '@/components/ui/link';
 
 export function AuthLayout() {
   return (

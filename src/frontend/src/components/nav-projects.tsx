@@ -8,6 +8,8 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
 
+import { Link } from './ui/link';
+
 export function NavProjects({
   projects,
 }: {
@@ -23,7 +25,7 @@ export function NavProjects({
       <SidebarMenu>
         {projects.map((item) => (
           <SidebarMenuItem key={item.name}>
-            <SidebarMenuButton render={<a href={item.url} />}>
+            <SidebarMenuButton render={<Link to={item.url} viewTransition />}>
               {item.icon && <item.icon />}
               {item.name}
             </SidebarMenuButton>

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Link } from 'react-router';
 
 import {
   usePostApiAuthRegister,
@@ -24,6 +23,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
+import { Link } from './ui/link';
 import { PasswordInput } from './ui/password-input';
 
 export function SignupForm({

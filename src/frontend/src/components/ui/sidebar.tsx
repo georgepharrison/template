@@ -502,19 +502,26 @@ function SidebarMenuButton({
   variant = 'default',
   size = 'default',
   tooltip,
+  preventClose = false,
   className,
   ...props
 }: useRender.ComponentProps<'button'> &
   React.ComponentProps<'button'> & {
     isActive?: boolean;
+    preventClose?: boolean;
     tooltip?: string | React.ComponentProps<typeof TooltipContent>;
   } & VariantProps<typeof sidebarMenuButtonVariants>) {
-  const { isMobile, state } = useSidebar();
+  const { isMobile, state, setOpenMobile } = useSidebar();
   const comp = useRender({
     defaultTagName: 'button',
     props: mergeProps<'button'>(
       {
         className: cn(sidebarMenuButtonVariants({ variant, size }), className),
+        onClick: () => {
+          if (isMobile && !preventClose) {
+            setTimeout(() => setOpenMobile(false), 150);
+          }
+        },
       },
       props
     ),
@@ -674,6 +681,7 @@ function SidebarMenuSubButton({
     size?: 'sm' | 'md';
     isActive?: boolean;
   }) {
+  const { isMobile, setOpenMobile } = useSidebar();
   return useRender({
     defaultTagName: 'a',
     props: mergeProps<'a'>(
@@ -682,6 +690,11 @@ function SidebarMenuSubButton({
           'text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground [&>svg]:text-sidebar-accent-foreground data-active:bg-sidebar-accent data-active:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 outline-hidden group-data-[collapsible=icon]:hidden focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[size=md]:text-sm data-[size=sm]:text-xs [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0',
           className
         ),
+        onClick: () => {
+          if (isMobile) {
+            setTimeout(() => setOpenMobile(false), 150);
+          }
+        },
       },
       props
     ),

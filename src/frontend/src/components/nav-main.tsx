@@ -16,8 +16,12 @@ import {
   SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
 
+import { Link } from './ui/link';
+
 export function NavMain({
   items,
+  openItems,
+  setOpenItems,
 }: {
   items: {
     title: string;
@@ -29,7 +33,21 @@ export function NavMain({
       url: string;
     }[];
   }[];
+  openItems: Set<string>;
+  setOpenItems: React.Dispatch<React.SetStateAction<Set<string>>>;
 }) {
+  const toggleItem = (title: string) => {
+    setOpenItems((prev) => {
+      const next = new Set(prev);
+      if (next.has(title)) {
+        next.delete(title);
+      } else {
+        next.add(title);
+      }
+      return next;
+    });
+  };
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Platform</SidebarGroupLabel>
@@ -38,11 +56,12 @@ export function NavMain({
           <Collapsible
             key={item.title}
             render={<SidebarMenuItem />}
-            defaultOpen={item.isActive}
+            open={openItems.has(item.title)}
+            onOpenChange={() => toggleItem(item.title)}
             className="group/collapsible"
           >
             <CollapsibleTrigger
-              render={<SidebarMenuButton tooltip={item.title} />}
+              render={<SidebarMenuButton preventClose tooltip={item.title} />}
             >
               {item.icon && <item.icon />}
               <span>{item.title}</span>
@@ -52,7 +71,9 @@ export function NavMain({
               <SidebarMenuSub>
                 {item.items?.map((subItem) => (
                   <SidebarMenuSubItem key={subItem.title}>
-                    <SidebarMenuSubButton render={<a href={subItem.url} />}>
+                    <SidebarMenuSubButton
+                      render={<Link to={subItem.url} viewTransition />}
+                    >
                       {subItem.title}
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>

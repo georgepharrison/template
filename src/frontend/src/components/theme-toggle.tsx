@@ -1,42 +1,82 @@
+// src/frontend/src/components/theme-toggle.tsx
+import { type VariantProps } from 'class-variance-authority';
+import { useId } from 'react';
+
+import { Button, buttonVariants } from '@/components/ui/button';
+import { useTheme } from '@/hooks/use-theme';
+
 import './theme-toggle.css';
 
-interface ThemeToggleProps {
-  toggled: boolean;
+const iconSizeMap = {
+  default: 'size-5',
+  xs: 'size-3',
+  sm: 'size-4',
+  lg: 'size-6',
+  icon: 'size-5',
+  'icon-xs': 'size-3',
+  'icon-sm': 'size-4',
+  'icon-lg': 'size-6',
+} as const;
+
+interface ThemeToggleProps extends VariantProps<typeof buttonVariants> {
   className?: string;
 }
 
-export function ThemeToggle({ toggled, className }: ThemeToggleProps) {
+export function ThemeToggle({
+  className,
+  variant = 'ghost',
+  size = 'icon',
+}: ThemeToggleProps) {
+  const maskId = useId();
+  const { theme, setTheme } = useTheme();
+
+  const isDark =
+    theme === 'dark' ||
+    (theme === 'system' &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+  function toggleTheme(event: React.MouseEvent<HTMLButtonElement>) {
+    setTheme(isDark ? 'light' : 'dark', event);
+  }
+
+  const iconSize = iconSizeMap[size ?? 'default'];
+
   return (
-    <span
-      aria-hidden="true"
-      className={`theme-toggle ${toggled ? 'theme-toggle--toggled' : ''} ${className ?? ''}`}
+    <Button
+      onClick={toggleTheme}
+      variant={variant}
+      size={size}
+      className={className}
+      aria-label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
     >
       <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="1em"
-        height="1em"
-        fill="currentColor"
-        strokeLinecap="round"
-        className="theme-toggle__classic"
-        viewBox="0 0 32 32"
+        className={`sun-and-moon ${iconSize} ${isDark ? 'dark' : ''}`}
+        aria-hidden="true"
+        viewBox="0 0 24 24"
       >
-        <clipPath id="theme-toggle__classic__cutout">
-          <path d="M0-5h30a1 1 0 0 0 9 13v24H0Z" />
-        </clipPath>
-        <g clipPath="url(#theme-toggle__classic__cutout)">
-          <circle cx="16" cy="16" r="9.34" />
-          <g stroke="currentColor" strokeWidth="1.5">
-            <path d="M16 5.5v-4" />
-            <path d="M16 30.5v-4" />
-            <path d="M1.5 16h4" />
-            <path d="M26.5 16h4" />
-            <path d="m23.4 8.6 2.8-2.8" />
-            <path d="m5.7 26.3 2.9-2.9" />
-            <path d="m5.8 5.8 2.8 2.8" />
-            <path d="m23.4 23.4 2.9 2.9" />
-          </g>
+        <mask className="moon" id={maskId}>
+          <rect x="0" y="0" width="100%" height="100%" fill="white" />
+          <circle cx="24" cy="10" r="6" fill="black" />
+        </mask>
+        <circle
+          className="sun"
+          cx="12"
+          cy="12"
+          r="6"
+          mask={`url(#${maskId})`}
+          fill="currentColor"
+        />
+        <g className="sun-beams" stroke="currentColor">
+          <line x1="12" y1="1" x2="12" y2="3" />
+          <line x1="12" y1="21" x2="12" y2="23" />
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+          <line x1="1" y1="12" x2="3" y2="12" />
+          <line x1="21" y1="12" x2="23" y2="12" />
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
         </g>
       </svg>
-    </span>
+    </Button>
   );
 }

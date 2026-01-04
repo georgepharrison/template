@@ -67,7 +67,9 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         navigateFallback: 'index.html',
-        // Don't cache API calls
+        // Exclude API and auth routes from service worker
+        navigateFallbackDenylist: [/^\/api\//, /^\/signin-google/],
+        // Remove or keep runtimeCaching, but it shouldn't cache auth routes now
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/.*\/api\/.*/i,
@@ -76,7 +78,7 @@ export default defineConfig({
               cacheName: 'api-cache',
               expiration: {
                 maxEntries: 100,
-                maxAgeSeconds: 60 * 60, // 1 hour
+                maxAgeSeconds: 60 * 60,
               },
             },
           },
@@ -108,11 +110,13 @@ export default defineConfig({
         target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
         changeOrigin: true,
         secure: false,
+        configure: configureProxy,
       },
       '/signin-google': {
         target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
         changeOrigin: true,
         secure: false,
+        configure: configureProxy,
       },
     },
   },

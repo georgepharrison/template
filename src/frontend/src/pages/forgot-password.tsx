@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Link } from 'react-router';
 
 import { usePostApiAuthForgotPassword } from '@/api/auth.gen';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -12,6 +11,7 @@ import {
 } from '@/components/ui/card';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { Link } from '@/components/ui/link';
 
 export function ForgotPasswordPage() {
   const [submitted, setSubmitted] = useState(false);

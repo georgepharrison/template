@@ -1,58 +1,49 @@
+import type React from 'react';
+import { Suspense } from 'react';
 import { Outlet } from 'react-router';
 
+import { AppHeader } from '@/components/app-header';
 import { AppSidebar } from '@/components/app-sidebar';
 import { PWAInstallPrompt } from '@/components/pwa-install-prompt';
 import { PWAUpdatePrompt } from '@/components/pwa-update-prompt';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
-import { Separator } from '@/components/ui/separator';
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from '@/components/ui/sidebar';
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 
 export function AppLayout() {
   return (
     <>
-      <SidebarProvider>
-        <AppSidebar />
+      <SidebarProvider
+        style={
+          {
+            '--sidebar-width': 'calc(var(--spacing) * 72)',
+            '--header-height': 'calc(var(--spacing) * 12)',
+          } as React.CSSProperties
+        }
+      >
+        <AppSidebar variant="inset" />
         <SidebarInset>
-          <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-            <div className="flex items-center gap-2 px-4">
-              <SidebarTrigger className="-ml-1" />
-              <Separator
-                orientation="vertical"
-                className="mr-2 data-[orientation=vertical]:h-4"
-              />
-              <Breadcrumb>
-                <BreadcrumbList>
-                  <BreadcrumbItem className="hidden md:block">
-                    <BreadcrumbLink href="#">
-                      Building Your Application
-                    </BreadcrumbLink>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator className="hidden md:block" />
-                  <BreadcrumbItem>
-                    <BreadcrumbPage>Data Fetching</BreadcrumbPage>
-                  </BreadcrumbItem>
-                </BreadcrumbList>
-              </Breadcrumb>
-            </div>
-          </header>
-          <main className="flex flex-1 flex-col gap-4 p-4 pt-0">
-            <Outlet />
+          <AppHeader />
+          <main
+            className="flex-1 p-4"
+            style={{ viewTransitionName: 'main-content' }}
+          >
+            <Suspense fallback={<PageSkeleton />}>
+              <Outlet />
+            </Suspense>
           </main>
         </SidebarInset>
       </SidebarProvider>
       <PWAInstallPrompt />
       <PWAUpdatePrompt />
     </>
+  );
+}
+
+function PageSkeleton() {
+  return (
+    <div className="mx-auto max-w-lg animate-pulse space-y-4">
+      <div className="bg-muted h-8 w-48 rounded" />
+      <div className="bg-muted h-32 rounded" />
+      <div className="bg-muted h-32 rounded" />
+    </div>
   );
 }
